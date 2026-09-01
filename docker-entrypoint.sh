@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+
+# vendor/ is installed into the image at build time, but docker-compose.yml
+# mounts the project over /var/www/html, which hides it. Restore it from the
+# build cache whenever the host side has no usable vendor/ — so a fresh clone
+# runs without anyone having to install Composer or go online.
+if [ ! -d /var/www/html/vendor ] || [ -z "$(ls -A /var/www/html/vendor 2>/dev/null)" ]; then
+    echo "==> Restoring vendor/ from build cache..."
+    mkdir -p /var/www/html/vendor
+    cp -a /var/www/vendor-cache/. /var/www/html/vendor/
+    echo "==> vendor/ ready."
+fi
+
+# Symfony writes its cache and logs here, and both sit on the bind mount.
+# www-data is remapped to uid 1000 in the Dockerfile, so what it writes stays
+# editable for the student on the host.
+mkdir -p /var/www/html/var/cache /var/www/html/var/log
+chown -R www-data:www-data /var/www/html/var
+
+# apache2ctl does not forward SIGTERM, so Ctrl-C left Docker to kill the
+# container after a timeout (exit code 137). apache2-foreground execs Apache
+# directly and shuts down cleanly.
+exec apache2-foreground
