@@ -196,10 +196,19 @@ Put anything genuinely secret in `.env.local`, which should never be committed.
 
 ## Dependencies
 
-`vendor/` ships with the project, so the environment builds and runs without a
-network connection. There is no `composer.lock`, so running `composer install`
-would resolve different versions than the tasks were written against — use the
-dependencies as shipped unless you deliberately want to change them.
+`vendor/` is **not** in git — `composer.lock` is. Building the image installs the
+exact versions pinned in that lockfile, so every machine ends up with the same
+dependencies. A fresh clone therefore builds fine; it just needs internet for
+that one step.
+
+Once built, no network is needed again: `vendor/` is baked into the image, and if
+your working copy has no `vendor/` the container restores it on first start.
+
+Composer itself is available inside the container:
+
+```bash
+docker compose exec app composer <command>
+```
 
 ## Credits
 
