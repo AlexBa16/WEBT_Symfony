@@ -30,8 +30,12 @@ echo "==> Migrations done."
 # so production is never touched by accident.
 if [ "${LOAD_FIXTURES:-0}" = "1" ]; then
     echo "==> Loading Fixtures..."
-    runuser -u www-data -- php /var/www/html/bin/console doctrine:fixtures:load --append --no-interaction
-    echo "==> Fixtures done."
+    if [ -d "/var/www/html/src/DataFixtures" ] && [ "$(ls -A /var/www/html/src/DataFixtures)" ]; then
+        runuser -u www-data -- php /var/www/html/bin/console doctrine:fixtures:load --append --no-interaction
+        echo "==> Fixtures done."
+    else
+        echo "==> No fixtures directory or files found, skipping."
+    fi
 else
     echo "==> Skipping Fixtures (LOAD_FIXTURES != 1)."
 fi
