@@ -21,7 +21,7 @@ A starting point for students who want to build **with the Symfony framework**.
 ├── var/                 # cache, logs and the SQLite database (generated)
 ├── vendor/              # Composer dependencies (ships with the project)
 ├── .env                 # development defaults
-├── Dockerfile           # PHP 8.4 + Apache image
+├── Dockerfile           # PHP 8.5 + Apache image
 ├── docker-compose.yml   # Docker Compose configuration
 ├── docker-entrypoint.sh # restores vendor/, prepares var/, starts Apache
 ├── start.sh             # start/stop containers, run console commands
