@@ -18,6 +18,24 @@ fi
 mkdir -p /var/www/html/var/cache /var/www/html/var/log
 chown -R www-data:www-data /var/www/html/var
 
+# Apply pending Doctrine migrations. The database is healthy by now (see
+# depends_on in compose.yaml). Run as www-data so the cache files this
+# creates in var/ aren't owned by root. Migrations are idempotent, so
+# running on every start is safe: already-applied ones are skipped.
+echo "==> Running Doctrine migrations..."
+runuser -u www-data -- php /var/www/html/bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --all-or-nothing
+echo "==> Migrations done."
+
+# Only runs when LOAD_FIXTURES=1 (set in docker-compose.yaml),
+# so production is never touched by accident.
+if [ "${LOAD_FIXTURES:-0}" = "1" ]; then
+    echo "==> Loading Fixtures..."
+    runuser -u www-data -- php /var/www/html/bin/console doctrine:fixtures:load --append --no-interaction
+    echo "==> Fixtures done."
+else
+    echo "==> Skipping Fixtures (LOAD_FIXTURES != 1)."
+fi
+
 # apache2ctl does not forward SIGTERM, so Ctrl-C left Docker to kill the
 # container after a timeout (exit code 137). apache2-foreground execs Apache
 # directly and shuts down cleanly.
